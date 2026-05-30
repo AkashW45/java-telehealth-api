@@ -7,6 +7,21 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -15,32 +30,18 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import java.io.IOException;
 
 @RestControllerAdvice
 public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
 
-  private static final Logger log = LoggerFactory.getLogger(CustomizeExceptionHandler.class);
-
   @ExceptionHandler({InvalidRequestException.class})
   public ResponseEntity<Object> handleInvalidRequest(RuntimeException e, WebRequest request) {
     InvalidRequestException ire = (InvalidRequestException) e;
-    logRequest(request, UNPROCESSABLE_ENTITY);
 
     List<FieldErrorResource> errorResources =
         ire.getErrors().getFieldErrors().stream()
@@ -121,49 +122,36 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
     }
   }
 
-  private void logRequest(WebRequest request, HttpStatus status) {
-    long startTime = System.currentTimeMillis();
-    // in a real filter, startTime would be stored; here we approximate with current time
-    String method = request.getMethod() != null ? request.getMethod() : "UNKNOWN";
-    String path = request.getDescription(false).replace("uri=", "");
-    log.info("{} {} -> {} ({} ms)", method, path, status.value(), 0);
-  }
-}
-
-@Component
-class RequestLoggingFilter implements Filter {
-
-  private static final Logger log = LoggerFactory.getLogger(RequestLoggingFilter.class);
-
-  @Override
-  public void init(FilterConfig filterConfig) throws ServletException {
-    // no-op
+  @Bean
+  public FilterRegistrationBean<LoggingFilter> loggingFilter() {
+    FilterRegistrationBean<LoggingFilter> registrationBean = new FilterRegistrationBean<>();
+    registrationBean.setFilter(new LoggingFilter());
+    registrationBean.addUrlPatterns("/*");
+    registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+    return registrationBean;
   }
 
-  @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-      throws IOException, ServletException {
-    if (!(request instanceof HttpServletRequest && response instanceof HttpServletResponse)) {
-      chain.doFilter(request, response);
-      return;
+  static class LoggingFilter implements Filter {
+    private static final Logger logger = LoggerFactory.getLogger(LoggingFilter.class);
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
     }
-    HttpServletRequest httpRequest = (HttpServletRequest) request;
-    HttpServletResponse httpResponse = (HttpServletResponse) response;
-    long startTime = System.currentTimeMillis();
-    try {
-      chain.doFilter(request, response);
-    } finally {
-      long duration = System.currentTimeMillis() - startTime;
-      log.info("{} {} -> {} ({} ms)",
-          httpRequest.getMethod(),
-          httpRequest.getRequestURI(),
-          httpResponse.getStatus(),
-          duration);
-    }
-  }
 
-  @Override
-  public void destroy() {
-    // no-op
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+        throws IOException, ServletException {
+      HttpServletRequest httpRequest = (HttpServletRequest) request;
+      long startTime = System.currentTimeMillis();
+      chain.doFilter(request, response);
+      long elapsed = System.currentTimeMillis() - startTime;
+      HttpServletResponse httpResponse = (HttpServletResponse) response;
+      logger.info("{} {} {} {}ms", httpRequest.getMethod(), httpRequest.getRequestURI(),
+          httpResponse.getStatus(), elapsed);
+    }
+
+    @Override
+    public void destroy() {
+    }
   }
 }

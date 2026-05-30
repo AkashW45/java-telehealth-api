@@ -6,7 +6,12 @@ import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.restassured.filter.Filter;
+import io.restassured.filter.FilterContext;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
+import io.restassured.response.Response;
+import io.restassured.specification.FilterableRequestSpecification;
+import io.restassured.specification.FilterableResponseSpecification;
 import io.spring.JacksonCustomizations;
 import io.spring.api.security.WebSecurityConfig;
 import io.spring.application.ArticleQueryService;
@@ -22,6 +27,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 @WebMvcTest(ArticlesApi.class)
 @Import({WebSecurityConfig.class, JacksonCustomizations.class})
 public class ListArticleApiTest extends TestWithCurrentUser {
@@ -33,11 +41,25 @@ public class ListArticleApiTest extends TestWithCurrentUser {
 
   @Autowired private MockMvc mvc;
 
+  private static final Logger logger = Logger.getLogger(ListArticleApiTest.class.getName());
+
   @Override
   @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     RestAssuredMockMvc.mockMvc(mvc);
+
+    RestAssuredMockMvc.filters(new Filter() {
+      @Override
+      public Response filter(FilterableRequestSpecification requestSpec, FilterableResponseSpecification responseSpec, FilterContext ctx) {
+        long start = System.currentTimeMillis();
+        Response response = ctx.next(requestSpec, responseSpec);
+        long elapsed = System.currentTimeMillis() - start;
+        logger.log(Level.INFO, "Timestamp: {0}, Method: {1}, Path: {2}, Status: {3}, Time: {4}ms",
+            new Object[]{System.currentTimeMillis(), requestSpec.getMethod(), requestSpec.getDerivedPath(), response.getStatusCode(), elapsed});
+        return response;
+      }
+    });
   }
 
   @Test

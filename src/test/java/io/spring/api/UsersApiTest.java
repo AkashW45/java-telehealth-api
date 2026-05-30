@@ -21,27 +21,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.TestConfiguration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-@WebMvcTest(UsersApi.class)
+@WebMvcTest(controllers = UsersApi.class, filters = {UsersApiTest.LoggingFilter.class})
 @Import({
   WebSecurityConfig.class,
   UserQueryService.class,
@@ -49,35 +47,6 @@ import org.springframework.test.web.servlet.MockMvc;
   JacksonCustomizations.class
 })
 public class UsersApiTest {
-
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        public Filter requestLoggingFilter() {
-            return new Filter() {
-                private final Logger logger = Logger.getLogger("RequestLoggingFilter");
-
-                @Override
-                public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-                    HttpServletRequest httpReq = (HttpServletRequest) req;
-                    long start = System.currentTimeMillis();
-                    chain.doFilter(req, res);
-                    long duration = System.currentTimeMillis() - start;
-                    int status = ((HttpServletResponse) res).getStatus();
-                    logger.info(String.format("Timestamp: %tFT%<tT.%<tLZ | Method: %s | Path: %s | Status: %d | Duration: %d ms",
-                            new java.util.Date(), httpReq.getMethod(), httpReq.getRequestURI(), status, duration));
-                }
-
-                @Override
-                public void init(FilterConfig filterConfig) {}
-
-                @Override
-                public void destroy() {}
-            };
-        }
-    }
-
-
   @Autowired private MockMvc mvc;
 
   @MockBean private UserRepository userRepository;
@@ -96,6 +65,27 @@ public class UsersApiTest {
   public void setUp() throws Exception {
     RestAssuredMockMvc.mockMvc(mvc);
     defaultAvatar = "https://static.productionready.io/images/smiley-cyrus.jpg";
+  }
+
+  public static class LoggingFilter implements Filter {
+    private static final Logger logger = Logger.getLogger(LoggingFilter.class.getName());
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+        throws IOException, ServletException {
+      HttpServletRequest httpRequest = (HttpServletRequest) request;
+      HttpServletResponse httpResponse = (HttpServletResponse) response;
+      long startTime = System.currentTimeMillis();
+
+      chain.doFilter(request, response);
+
+      long elapsed = System.currentTimeMillis() - startTime;
+      logger.info(String.format("%s %s %s %dms",
+          httpRequest.getMethod(),
+          httpRequest.getRequestURI(),
+          httpResponse.getStatus(),
+          elapsed));
+    }
   }
 
   @Test
