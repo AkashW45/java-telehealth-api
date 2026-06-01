@@ -55,8 +55,9 @@ public class ListArticleApiTest extends TestWithCurrentUser {
         long start = System.currentTimeMillis();
         Response response = ctx.next(requestSpec, responseSpec);
         long elapsed = System.currentTimeMillis() - start;
-        logger.log(Level.INFO, "Timestamp: {0}, Method: {1}, Path: {2}, Status: {3}, Time: {4}ms",
-            new Object[]{System.currentTimeMillis(), requestSpec.getMethod(), requestSpec.getDerivedPath(), response.getStatusCode(), elapsed});
+        String timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new java.util.Date());
+        logger.log(Level.INFO, "Request: timestamp={0}, method={1}, path={2}, status={3}, responseTimeMs={4}",
+            new Object[]{timestamp, requestSpec.getMethod(), requestSpec.getDerivedPath(), response.getStatusCode(), elapsed});
         return response;
       }
     });

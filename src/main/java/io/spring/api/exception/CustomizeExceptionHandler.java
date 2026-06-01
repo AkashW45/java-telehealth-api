@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import java.io.IOException;
+import java.time.Instant;
 
 @RestControllerAdvice
 public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
@@ -146,7 +147,8 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
       chain.doFilter(request, response);
       long elapsed = System.currentTimeMillis() - startTime;
       HttpServletResponse httpResponse = (HttpServletResponse) response;
-      logger.info("{} {} {} {}ms", httpRequest.getMethod(), httpRequest.getRequestURI(),
+      String timestamp = Instant.now().toString();
+      logger.info("{} {} {} {} {}ms", timestamp, httpRequest.getMethod(), httpRequest.getRequestURI(),
           httpResponse.getStatus(), elapsed);
     }
 
