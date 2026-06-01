@@ -21,8 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,13 +80,11 @@ public class UsersApiTest {
       chain.doFilter(request, response);
 
       long elapsed = System.currentTimeMillis() - startTime;
-      String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-      logger.info(String.format("%s %s %s %dms %s",
+      logger.info(String.format("%s %s %s %dms",
           httpRequest.getMethod(),
           httpRequest.getRequestURI(),
           httpResponse.getStatus(),
-          elapsed,
-          timestamp));
+          elapsed));
     }
   }
 
