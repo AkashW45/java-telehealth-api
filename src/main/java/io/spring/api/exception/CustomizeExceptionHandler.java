@@ -17,6 +17,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -37,6 +39,7 @@ import org.springframework.core.annotation.Order;
 import java.io.IOException;
 import java.time.Instant;
 
+@RestController
 @RestControllerAdvice
 public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -121,6 +124,11 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
     } else {
       return String.join(".", Arrays.copyOfRange(splits, 2, splits.length));
     }
+  }
+
+  @GetMapping("/ping")
+  public String ping() {
+    return "pong";
   }
 
   @Bean
