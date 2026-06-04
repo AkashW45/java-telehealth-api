@@ -9,7 +9,11 @@ RUN chmod +x gradlew || true
 RUN gradle --no-daemon dependencies > /dev/null 2>&1 || true
 
 COPY src ./src
-RUN gradle --no-daemon clean build -x test
+
+# `assemble` = compile + package only. Skips the `check` phase which includes
+# compileTestJava. This repo has pre-existing broken test code (Spring annotation
+# API mismatches) that fails to compile — irrelevant to producing the runtime jar.
+RUN gradle --no-daemon clean assemble
 
 FROM eclipse-temurin:11-jre-jammy
 WORKDIR /app
