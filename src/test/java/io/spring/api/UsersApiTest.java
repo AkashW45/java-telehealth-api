@@ -22,9 +22,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.Date;
+<<<<<<< HEAD
+=======
 import java.text.SimpleDateFormat;
+>>>>>>> 6be0baae8b4db8e7f1653c970179bda115b39df2
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -306,16 +308,13 @@ public class UsersApiTest {
   }
 
   @Test
-  public void should_return_version_info() throws Exception {
-    System.setProperty("GIT_COMMIT", "abc123");
-
+  public void should_return_pong_on_ping() throws Exception {
     given()
         .when()
-        .get("/version")
+        .get("/ping")
         .then()
         .statusCode(200)
-        .body("service", equalTo("contacts-api"))
-        .body("commit", equalTo("abc123"))
-        .body("timestamp", notNullValue());
+        .contentType("text/plain")
+        .body(equalTo("pong"));
   }
 }
