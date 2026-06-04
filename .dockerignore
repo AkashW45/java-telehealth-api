@@ -1,0 +1,12 @@
+.git
+.gitignore
+node_modules/
+dist/
+build/
+.gradle/
+target/
+*.log
+.env
+.idea/
+.vscode/
+.DS_Store
