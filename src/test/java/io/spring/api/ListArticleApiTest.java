@@ -49,6 +49,7 @@ public class ListArticleApiTest extends TestWithCurrentUser {
     super.setUp();
     RestAssuredMockMvc.mockMvc(mvc);
 
+    // Implements ADR-001: request logging middleware required for each service.
     RestAssuredMockMvc.filters(new Filter() {
       @Override
       public Response filter(FilterableRequestSpecification requestSpec, FilterableResponseSpecification responseSpec, FilterContext ctx) {
