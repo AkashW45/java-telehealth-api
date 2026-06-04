@@ -23,10 +23,10 @@ import java.util.Optional;
 import java.util.logging.Logger;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-<<<<<<< HEAD
-=======
 import java.text.SimpleDateFormat;
->>>>>>> 6be0baae8b4db8e7f1653c970179bda115b39df2
+
+import java.text.SimpleDateFormat;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
