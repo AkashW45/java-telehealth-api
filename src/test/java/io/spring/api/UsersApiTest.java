@@ -22,11 +22,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Date;
 import java.text.SimpleDateFormat;
-
-import java.text.SimpleDateFormat;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,12 +85,12 @@ public class UsersApiTest {
 
       long elapsed = System.currentTimeMillis() - startTime;
       String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-      logger.info(String.format("%s %s %s %s %dms",
-          timestamp,
+      logger.info(String.format("%s %s %s %dms %s",
           httpRequest.getMethod(),
           httpRequest.getRequestURI(),
           httpResponse.getStatus(),
-          elapsed));
+          elapsed,
+          timestamp));
     }
   }
 
@@ -305,5 +303,19 @@ public class UsersApiTest {
         .then()
         .statusCode(422)
         .body("message", equalTo("invalid email or password"));
+  }
+
+  @Test
+  public void should_return_version_info() throws Exception {
+    System.setProperty("GIT_COMMIT", "abc123");
+
+    given()
+        .when()
+        .get("/version")
+        .then()
+        .statusCode(200)
+        .body("service", equalTo("contacts-api"))
+        .body("commit", equalTo("abc123"))
+        .body("timestamp", notNullValue());
   }
 }
