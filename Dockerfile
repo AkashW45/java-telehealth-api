@@ -1,14 +1,10 @@
-# syntax=docker/dockerfile:1
-# Static site (plain HTML/CSS/JS) served by nginx. A container must listen on a
-# port for ECS/App Runner to route traffic to it — a bare .html file can't be
-# "deployed" on its own, so we wrap it in a tiny nginx web server.
-FROM nginx:1.27-alpine
+FROM gradle:8-jdk17 AS build
+WORKDIR /app
+COPY . .
+RUN gradle --no-daemon clean build -x test
 
-# Serve on nginx's native port 80; do NOT rewrite the config. The old sed-based
-# port rewrite silently failed on newer nginx images, leaving nginx on 80 while
-# the target group expected another port -> failed ELB health checks -> 502.
-COPY . /usr/share/nginx/html
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+COPY --from=build /app/build/libs/*.jar /app/app.jar
+EXPOSE 8000
+CMD ["sh", "-c", "exec java -jar $(ls /app/app.jar | head -1)"]
