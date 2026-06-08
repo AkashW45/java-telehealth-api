@@ -51,6 +51,16 @@ import java.io.IOException;
   UserQueryService.class,
   BCryptPasswordEncoder.class,
   JacksonCustomizations.class
+  @Test
+  public void should_ping_return_pong() throws Exception {
+    given()
+        .when()
+        .get("/ping")
+        .then()
+        .statusCode(200)
+        .contentType("text/plain")
+        .body(equalTo("pong"));
+  }
 })
 public class UsersApiTest {
   @Autowired private MockMvc mvc;
@@ -305,16 +315,5 @@ public class UsersApiTest {
         .then()
         .statusCode(422)
         .body("message", equalTo("invalid email or password"));
-  }
-
-  @Test
-  public void should_return_pong_on_ping() throws Exception {
-    given()
-        .when()
-        .get("/ping")
-        .then()
-        .statusCode(200)
-        .contentType("text/plain")
-        .body(equalTo("pong"));
   }
 }
