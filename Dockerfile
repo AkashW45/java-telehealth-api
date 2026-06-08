@@ -1,23 +1,14 @@
 # syntax=docker/dockerfile:1
-FROM gradle:7-jdk11 AS build
-WORKDIR /app
+# Static site (plain HTML/CSS/JS) served by nginx. A container must listen on a
+# port for ECS/App Runner to route traffic to it — a bare .html file can't be
+# "deployed" on its own, so we wrap it in a tiny nginx web server.
+FROM nginx:1.27-alpine
 
-COPY build.gradle settings.gradle* gradle.properties* ./
-COPY gradle ./gradle
-COPY gradlew ./
-RUN chmod +x gradlew || true
-RUN gradle --no-daemon dependencies > /dev/null 2>&1 || true
+# Serve on nginx's native port 80; do NOT rewrite the config. The old sed-based
+# port rewrite silently failed on newer nginx images, leaving nginx on 80 while
+# the target group expected another port -> failed ELB health checks -> 502.
+COPY . /usr/share/nginx/html
 
-COPY src ./src
+EXPOSE 80
 
-# `assemble` = compile + package only. Skips the `check` phase which includes
-# compileTestJava. This repo has pre-existing broken test code (Spring annotation
-# API mismatches) that fails to compile — irrelevant to producing the runtime jar.
-RUN gradle --no-daemon clean assemble
-
-FROM eclipse-temurin:11-jre-jammy
-WORKDIR /app
-COPY --from=build /app/build/libs/ ./libs/
-
-EXPOSE 8080
-CMD ["sh", "-c", "exec java -jar $(ls /app/libs/*.jar | grep -v -- '-plain' | head -1)"]
+CMD ["nginx", "-g", "daemon off;"]
