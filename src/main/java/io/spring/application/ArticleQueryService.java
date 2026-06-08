@@ -124,6 +124,7 @@ public class ArticleQueryService {
 
   private void fillExtraInfo(List<ArticleData> articles, User currentUser) {
     setFavoriteCount(articles);
+    setReadingTime(articles);
     if (currentUser != null) {
       setIsFavorite(articles, currentUser);
       setIsFollowingAuthor(articles, currentUser);
@@ -158,6 +159,23 @@ public class ArticleQueryService {
         articleData -> articleData.setFavoritesCount(countMap.get(articleData.getId())));
   }
 
+  private void setReadingTime(List<ArticleData> articles) {
+    articles.forEach(articleData -> articleData.setReadingTimeMinutes(computeReadingTime(articleData.getBody())));
+  }
+
+  private void setReadingTime(ArticleData articleData) {
+    articleData.setReadingTimeMinutes(computeReadingTime(articleData.getBody()));
+  }
+
+  private int computeReadingTime(String body) {
+    if (body == null || body.isEmpty()) {
+      return 1;
+    }
+    int wordCount = body.split("\\s+").length;
+    int minutes = (int) Math.ceil((double) wordCount / 200);
+    return Math.max(minutes, 1);
+  }
+
   private void setIsFavorite(List<ArticleData> articles, User currentUser) {
     Set<String> favoritedArticles =
         articleFavoritesReadService.userFavorites(
@@ -175,6 +193,7 @@ public class ArticleQueryService {
   private void fillExtraInfo(String id, User user, ArticleData articleData) {
     articleData.setFavorited(articleFavoritesReadService.isUserFavorite(user.getId(), id));
     articleData.setFavoritesCount(articleFavoritesReadService.articleFavoriteCount(id));
+    setReadingTime(articleData);
     articleData
         .getProfileData()
         .setFollowing(

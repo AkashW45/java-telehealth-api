@@ -379,6 +379,16 @@ public class ArticleDatafetcher {
         .tagList(articleData.getTagList())
         .title(articleData.getTitle())
         .updatedAt(ISODateTimeFormat.dateTime().withZoneUTC().print(articleData.getUpdatedAt()))
+        .readingTimeMinutes(computeReadingTimeMinutes(articleData.getBody()))
         .build();
+  }
+
+  private int computeReadingTimeMinutes(String body) {
+    if (body == null || body.isEmpty()) {
+      return 1;
+    }
+    int wordCount = body.split("\\s+").length;
+    int minutes = (int) Math.ceil(wordCount / 200.0);
+    return Math.max(minutes, 1);
   }
 }
