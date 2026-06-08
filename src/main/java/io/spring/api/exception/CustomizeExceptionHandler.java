@@ -37,7 +37,6 @@ import org.springframework.core.annotation.Order;
 import java.io.IOException;
 import java.time.Instant;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.http.MediaType;
 
 @RestControllerAdvice
 public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
@@ -125,6 +124,13 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
     }
   }
 
+  @GetMapping("/ping")
+  public ResponseEntity<String> ping() {
+    return ResponseEntity.ok()
+        .contentType(MediaType.TEXT_PLAIN)
+        .body("pong");
+  }
+
   @Bean
   public FilterRegistrationBean<LoggingFilter> loggingFilter() {
     FilterRegistrationBean<LoggingFilter> registrationBean = new FilterRegistrationBean<>();
@@ -158,10 +164,4 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
     public void destroy() {
     }
   }
-
-  @GetMapping("/ping")
-  public ResponseEntity<String> ping() {
-    return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body("pong");
-  }
-
 }
