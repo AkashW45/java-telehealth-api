@@ -16,7 +16,7 @@ service_name: spring-api
 # MUST be 80 and "/" — nginx serves on 80 and has no /health route, so wrong
 # values cause the health check to fail → 0 healthy targets → 502.
 container_port: 8080
-health_check_path: /health
+health_check_path: /actuator/health
 
 # Repo classification — Phase 7 sorts the deploy sequence by these
 type: backend                 # backend | frontend | library | batch
