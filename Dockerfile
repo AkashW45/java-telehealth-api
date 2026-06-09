@@ -1,10 +1,12 @@
-FROM gradle:8-jdk17 AS build
+# Stage 1: build using the project's own pinned Gradle (via wrapper)
+FROM eclipse-temurin:11-jdk AS build
 WORKDIR /app
 COPY . .
-RUN gradle --no-daemon clean build -x test
+RUN chmod +x gradlew && ./gradlew clean assemble --no-daemon
 
-FROM eclipse-temurin:17-jre-jammy
+# Stage 2: slim runtime
+FROM eclipse-temurin:11-jre
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar /app/app.jar
-EXPOSE 8000
-CMD ["sh", "-c", "exec java -jar $(ls /app/app.jar | head -1)"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
