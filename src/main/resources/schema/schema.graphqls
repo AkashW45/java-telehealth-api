@@ -56,7 +56,7 @@ type Article {
     tagList: [String],
     title: String!
     updatedAt: String!
-    readingTimeMinutes: Int!   # <--- ADD THIS LINE
+    readingTimeMinutes: Int!
 }
 
 type ArticleEdge {
